@@ -1,0 +1,1 @@
+${linkprefix}${code}${linksuffix}
