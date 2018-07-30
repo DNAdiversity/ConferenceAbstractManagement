@@ -1,1 +1,0 @@
-conference_abstract README
