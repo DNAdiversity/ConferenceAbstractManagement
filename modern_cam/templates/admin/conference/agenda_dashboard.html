@@ -1,0 +1,137 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .agenda-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  .agenda-panel {
+    border: 1px solid var(--hairline-color, #d9e1e7);
+    border-radius: 16px;
+    background: var(--body-bg, #fff);
+    padding: 1rem 1.1rem;
+  }
+  .session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .slot-list {
+    margin: .75rem 0 0;
+    padding-left: 1rem;
+  }
+  .slot-list li {
+    margin-bottom: .5rem;
+  }
+  .agenda-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .agenda-table th,
+  .agenda-table td {
+    padding: .75rem .45rem;
+    border-bottom: 1px solid var(--hairline-color, #eef2f5);
+    vertical-align: top;
+  }
+  .schedule-form {
+    display: grid;
+    gap: .45rem;
+    min-width: 220px;
+  }
+  .schedule-form select,
+  .schedule-form input,
+  .schedule-form button {
+    width: 100%;
+  }
+  .button {
+    display: inline-block;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    padding: .55rem .85rem;
+    background: var(--primary, #417690);
+    color: #fff;
+    text-decoration: none;
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a> &rsaquo; Agenda assembly
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="agenda-grid">
+  <section class="agenda-panel">
+    <a class="button" href="{{ add_session_url }}">Create session</a>
+    <div class="session-grid">
+      {% for session in sessions %}
+        <article class="agenda-panel">
+          <h2><a href="{% url 'admin:conference_programsession_change' session.pk %}">{{ session.name }}</a></h2>
+          <p>{{ session.starts_at|date:"M j, Y · g:i A" }}{% if session.ends_at %} to {{ session.ends_at|date:"g:i A" }}{% endif %}</p>
+          <p>{{ session.room }}{% if session.chair_name %} · {{ session.chair_name }}{% endif %}</p>
+          <ul class="slot-list">
+            {% for slot in session.slots.all %}
+              <li>
+                {{ slot.order }}.
+                <a href="{% url 'admin:conference_submission_change' slot.submission.pk %}">{{ slot.submission.title }}</a>
+                {% if slot.starts_at %}({{ slot.starts_at|date:"g:i A" }}){% endif %}
+              </li>
+            {% empty %}
+              <li>No abstracts assigned yet.</li>
+            {% endfor %}
+          </ul>
+        </article>
+      {% empty %}
+        <p>No sessions exist yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="agenda-panel">
+    <h2>Review-ready but unscheduled</h2>
+    <table class="agenda-table">
+      <thead>
+        <tr>
+          <th>Submission</th>
+          <th>Status</th>
+          <th>Topics</th>
+          <th>Completed reviews</th>
+          <th>Quick schedule</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for submission in unscheduled %}
+          <tr>
+            <td><a href="{% url 'admin:conference_submission_change' submission.pk %}">{{ submission.title }}</a></td>
+            <td>{{ submission.get_status_display }}</td>
+            <td>{{ submission.topic_names|join:", "|default:"No topics" }}</td>
+            <td>{{ submission.completed_reviews }}</td>
+            <td>
+              <form class="schedule-form" method="post" action="{% url 'admin:conference-agenda-schedule' submission.pk %}">
+                {% csrf_token %}
+                <select name="session" required>
+                  <option value="">Select session</option>
+                  {% for session in sessions %}
+                    <option value="{{ session.pk }}">{{ session.name }} · {{ session.starts_at|date:"M j g:i A" }}</option>
+                  {% endfor %}
+                </select>
+                <input type="datetime-local" name="starts_at">
+                <input type="number" name="order" min="1" value="1">
+                <button type="submit">Schedule</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">Everything review-ready is already scheduled.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

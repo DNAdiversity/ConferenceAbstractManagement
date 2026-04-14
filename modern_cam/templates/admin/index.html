@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .console-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .console-card {
+    border: 1px solid var(--hairline-color, #d9e1e7);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    background: var(--body-bg, #fff);
+  }
+  .console-card h3 {
+    margin: 0 0 .45rem;
+  }
+  .console-card p {
+    margin: 0 0 .9rem;
+    color: var(--body-quiet-color, #5b6b79);
+    line-height: 1.5;
+  }
+  .console-card a.button {
+    display: inline-block;
+    padding: .55rem .85rem;
+    border-radius: 999px;
+    text-decoration: none;
+    background: var(--primary, #417690);
+    color: #fff;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div class="module">
+    <h2>Conference Console</h2>
+    <div class="console-grid">
+      <section class="console-card">
+        <h3>Operations</h3>
+        <p>Review the full abstract pipeline, see status counts, surface overdue reviews, and spot submissions that still need reviewer coverage.</p>
+        <a class="button" href="{% url 'admin:conference-operations-dashboard' %}">Open operations</a>
+      </section>
+      <section class="console-card">
+        <h3>Reviewers</h3>
+        <p>Inspect reviewer workload, map reviewer expertise to topics, and chase outstanding reviews with one-click reminders.</p>
+        <a class="button" href="{% url 'admin:conference-reviewer-dashboard' %}">Open reviewer console</a>
+      </section>
+      <section class="console-card">
+        <h3>Agenda</h3>
+        <p>Assemble the program by comparing scheduled sessions with review-ready submissions that still need a slot.</p>
+        <a class="button" href="{% url 'admin:conference-agenda-dashboard' %}">Open agenda console</a>
+      </section>
+    </div>
+  </div>
+
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}

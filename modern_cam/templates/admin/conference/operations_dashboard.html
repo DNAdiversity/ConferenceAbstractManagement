@@ -1,0 +1,167 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .ops-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  .ops-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .9rem;
+  }
+  .ops-card,
+  .ops-panel {
+    border: 1px solid var(--hairline-color, #d9e1e7);
+    border-radius: 16px;
+    background: var(--body-bg, #fff);
+    padding: 1rem 1.1rem;
+  }
+  .ops-card strong {
+    display: block;
+    margin-top: .25rem;
+    font-size: 1.45rem;
+  }
+  .ops-panel h2 {
+    margin-top: 0;
+  }
+  .ops-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ops-table th,
+  .ops-table td {
+    padding: .7rem .4rem;
+    border-bottom: 1px solid var(--hairline-color, #eef2f5);
+    vertical-align: top;
+  }
+  .muted {
+    color: var(--body-quiet-color, #5b6b79);
+  }
+  .suggestions {
+    margin: .35rem 0 0;
+    padding-left: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a> &rsaquo; Conference operations
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="ops-grid">
+  <section class="ops-cards">
+    {% for row in status_rows %}
+      <article class="ops-card">
+        <div class="muted">{{ row.label }}</div>
+        <strong style="color: {{ row.color }};">{{ row.count }}</strong>
+      </article>
+    {% endfor %}
+  </section>
+
+  <section class="ops-panel">
+    <h2>Abstract triage</h2>
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>Submission</th>
+          <th>Status</th>
+          <th>Topics</th>
+          <th>Review coverage</th>
+          <th>Suggested reviewers</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in triage_rows %}
+          <tr>
+            <td>
+              <a href="{{ row.admin_url }}"><strong>{{ row.submission.title }}</strong></a><br>
+              <span class="muted">{{ row.submission.submitter.get_full_name|default:row.submission.submitter.email }}</span>
+            </td>
+            <td>{{ row.submission.get_status_display }}</td>
+            <td>{{ row.submission.topic_names|join:", "|default:"No topics" }}</td>
+            <td>{{ row.submission.completed_reviews }}/{{ row.submission.assigned_reviews }}</td>
+            <td>
+              {% if row.suggestions %}
+                <ul class="suggestions">
+                  {% for suggestion in row.suggestions %}
+                    <li>
+                      <a href="{% url 'admin:auth_user_change' suggestion.reviewer.pk %}">{{ suggestion.reviewer.get_full_name|default:suggestion.reviewer.email }}</a>
+                      <span class="muted">score {{ suggestion.match_score }}, open {{ suggestion.open_reviews }}, topics {{ suggestion.matched_topics|join:", " }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="muted">No topic match available</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">No submissions currently need attention.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="ops-panel">
+    <h2>Overdue reviews</h2>
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>Submission</th>
+          <th>Reviewer</th>
+          <th>Due</th>
+          <th>Reminders</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for assignment in overdue_assignments %}
+          <tr>
+            <td><a href="{% url 'admin:conference_reviewassignment_change' assignment.pk %}">{{ assignment.submission.title }}</a></td>
+            <td>{{ assignment.reviewer.get_full_name|default:assignment.reviewer.email }}</td>
+            <td>{{ assignment.due_at|date:"M j, Y" }}</td>
+            <td>{{ assignment.reminder_count }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4">No overdue reviews right now.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="ops-panel">
+    <h2>Topic coverage</h2>
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>Submissions</th>
+          <th>Mapped reviewers</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for topic in topic_rows %}
+          <tr>
+            <td><a href="{% url 'admin:conference_topic_change' topic.pk %}">{{ topic.category }} / {{ topic.name }}</a></td>
+            <td>{{ topic.submission_total }}</td>
+            <td>{{ topic.reviewer_total }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3">No topics configured yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

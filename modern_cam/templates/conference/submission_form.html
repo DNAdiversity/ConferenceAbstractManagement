@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Minimal submitter flow</p>
+        <h1>{{ page_title }}</h1>
+        <p class="lede compact">Long scientific forms need breathing room. Draft safely, keep the author list tidy, and submit only when this version is ready for review.</p>
+    </div>
+</section>
+
+<form method="post" class="form-layout">
+    {% csrf_token %}
+    <section class="surface form-panel">
+        <div class="section-header">
+            <div>
+                <h2>Abstract</h2>
+                <p class="muted">Keep the title specific, the abstract clean, and the topic selection focused.</p>
+            </div>
+        </div>
+        {% for field in form %}
+            <div class="field-block">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+    </section>
+
+    <section class="surface form-panel">
+        <div class="section-header">
+            <div>
+                <h2>Authors</h2>
+                <p class="muted">Capture the full corresponding and presenting author list without compressing the fields into a cramped grid.</p>
+            </div>
+            <button class="button-link secondary" type="button" data-add-formset="#author-formset" data-template="#empty-author-form">Add Author</button>
+        </div>
+
+        {{ formset.management_form }}
+        {% for non_form_error in formset.non_form_errors %}
+            <p class="field-error">{{ non_form_error }}</p>
+        {% endfor %}
+
+        <div id="author-formset" class="stack-list">
+            {% for author_form in formset %}
+                <article class="surface nested-surface formset-entry">
+                    {% for hidden in author_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div class="author-grid">
+                        {% for field in author_form.visible_fields %}
+                            <div class="field-block">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="text-link danger-link" type="button" data-remove-form>Remove this author</button>
+                </article>
+            {% endfor %}
+        </div>
+
+        <template id="empty-author-form">
+            <article class="surface nested-surface formset-entry">
+                {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                <div class="author-grid">
+                    {% for field in formset.empty_form.visible_fields %}
+                        <div class="field-block">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="text-link danger-link" type="button" data-remove-form>Remove this author</button>
+            </article>
+        </template>
+    </section>
+
+    <section class="surface form-panel">
+        <div class="section-header">
+            <div>
+                <h2>Finalize</h2>
+                <p class="muted">Save a draft to keep shaping the abstract, or submit when this version is ready for peer review.</p>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="button-link secondary" type="submit" name="save_draft">Save Draft</button>
+            <button class="button-link" type="submit" name="submit_submission">Submit For Review</button>
+        </div>
+    </section>
+</form>
+{% endblock %}

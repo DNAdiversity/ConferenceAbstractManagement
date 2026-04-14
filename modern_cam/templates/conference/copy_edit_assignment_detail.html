@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Copy Edit · {{ assignment.submission.title }}{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Copy editor workspace</p>
+        <h1>{{ assignment.submission.title }}</h1>
+        <p class="lede compact">Refine the public-facing abstract while keeping a reviewable editorial note trail.</p>
+    </div>
+    <span class="pill">{% if assignment.completed_at %}Edited{% else %}Open assignment{% endif %}</span>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <h2>Current abstract</h2>
+        <div class="prose-block">{{ assignment.submission.display_text|linebreaks }}</div>
+    </article>
+
+    <article class="surface">
+        <h2>Save edited version</h2>
+        <form method="post" class="stack-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="field-block">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+            <button class="button-link" type="submit">Save Copy Edit</button>
+        </form>
+    </article>
+</section>
+{% endblock %}

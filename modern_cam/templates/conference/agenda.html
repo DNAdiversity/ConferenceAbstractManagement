@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Minimal public schedule</p>
+        <h1>Conference agenda</h1>
+        <p class="lede compact">Scheduled sessions and abstracts grouped by day.</p>
+    </div>
+</section>
+
+{% for day, sessions in grouped_sessions.items %}
+    <section class="surface agenda-block">
+        <h2>{{ day|date:"l, F j, Y" }}</h2>
+        <div class="session-grid">
+            {% for session in sessions %}
+                <article class="session-card">
+                    <p class="session-time">{{ session.starts_at|date:"g:i A" }}{% if session.ends_at %} – {{ session.ends_at|date:"g:i A" }}{% endif %}</p>
+                    <h3>{{ session.name }}</h3>
+                    <p class="muted">{{ session.room }}{% if session.chair_name %} · {{ session.chair_name }}{% endif %}</p>
+                    {% if session.description %}<p>{{ session.description }}</p>{% endif %}
+                    <div class="stack-list compact-stack">
+                        {% for slot in session.slots.all %}
+                            <div class="list-card static-card">
+                                <div>
+                                    <strong>{{ slot.submission.title }}</strong>
+                                    <p class="muted">{{ slot.submission.get_presentation_type_display }}</p>
+                                </div>
+                                {% if slot.starts_at %}
+                                    <span class="pill soft-pill">{{ slot.starts_at|date:"g:i A" }}</span>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="muted">No abstracts assigned yet.</p>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% empty %}
+    <section class="surface">
+        <p class="empty-state">The agenda is still being assembled.</p>
+    </section>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Organizer Queue{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Program desk</p>
+        <h1>Submission operations</h1>
+        <p class="lede compact">Filter by stage, inspect details, assign work, and move accepted abstracts toward the public program.</p>
+    </div>
+</section>
+
+<form method="get" class="surface filter-bar">
+    <div class="field-block">
+        <label for="id_q">Search</label>
+        <input id="id_q" type="search" name="q" value="{{ search }}" placeholder="Title, author, or submitter email">
+    </div>
+    <div class="field-block">
+        <label for="id_status">Status</label>
+        <select id="id_status" name="status">
+            <option value="">All statuses</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-actions">
+        <button class="button-link" type="submit">Apply filters</button>
+    </div>
+</form>
+
+<section class="surface">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Submitter</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                    <tr>
+                        <td><a class="text-link" href="{% url 'organizer-submission-detail' submission.public_id %}">{{ submission.title }}</a></td>
+                        <td>{{ submission.submitter.get_full_name|default:submission.submitter.email }}</td>
+                        <td>{{ submission.get_presentation_type_display }}</td>
+                        <td>{{ submission.get_status_display }}</td>
+                        <td>{{ submission.updated_at|date:"M j, Y" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">No submissions match the current filters.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

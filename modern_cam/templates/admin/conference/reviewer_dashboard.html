@@ -1,0 +1,118 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .reviewer-panel {
+    border: 1px solid var(--hairline-color, #d9e1e7);
+    border-radius: 16px;
+    background: var(--body-bg, #fff);
+    padding: 1rem 1.1rem;
+  }
+  .reviewer-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .reviewer-table th,
+  .reviewer-table td {
+    padding: .75rem .45rem;
+    border-bottom: 1px solid var(--hairline-color, #eef2f5);
+    vertical-align: top;
+  }
+  .topic-stack {
+    margin: .35rem 0 0;
+    padding-left: 1rem;
+  }
+  .inline-actions {
+    display: flex;
+    gap: .45rem;
+    flex-wrap: wrap;
+  }
+  .inline-actions a,
+  .inline-actions button {
+    border-radius: 999px;
+    padding: .42rem .75rem;
+    border: 1px solid var(--hairline-color, #d9e1e7);
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .inline-actions button {
+    font: inherit;
+  }
+  .quiet {
+    color: var(--body-quiet-color, #5b6b79);
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a> &rsaquo; Reviewer operations
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="reviewer-panel">
+  <h2>Reviewer workload and follow-up</h2>
+  <table class="reviewer-table">
+    <thead>
+      <tr>
+        <th>Reviewer</th>
+        <th>Availability</th>
+        <th>Open / Max</th>
+        <th>Overdue</th>
+        <th>Completed</th>
+        <th>Topic expertise</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in reviewer_rows %}
+        <tr>
+          <td>
+            <a href="{% url 'admin:auth_user_change' row.reviewer.pk %}"><strong>{{ row.reviewer.get_full_name|default:row.reviewer.email }}</strong></a><br>
+            <span class="quiet">{{ row.reviewer.email }}</span>
+          </td>
+          <td>
+            {% if row.profile.reviewer_is_available %}
+              Available
+            {% else %}
+              Unavailable
+            {% endif %}
+          </td>
+          <td>{{ row.reviewer.open_reviews }} / {{ row.profile.reviewer_max_assignments }}</td>
+          <td>{{ row.reviewer.overdue_reviews }}</td>
+          <td>{{ row.reviewer.completed_reviews }}</td>
+          <td>
+            {% if row.topic_labels %}
+              <ul class="topic-stack">
+                {% for label in row.topic_labels %}
+                  <li>{{ label }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="quiet">No topics mapped</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="inline-actions">
+              <a href="{{ row.assignments_url }}">Assignments</a>
+              <a href="{{ row.topic_url }}">Expertise</a>
+              <form action="{{ row.remind_url }}" method="post">
+                {% csrf_token %}
+                <button type="submit">Send reminder</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7">No reviewer accounts are configured yet.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

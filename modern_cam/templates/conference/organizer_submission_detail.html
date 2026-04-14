@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Organizer · {{ submission.title }}{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Program desk</p>
+        <h1>{{ submission.title }}</h1>
+        <p class="lede compact">{{ submission.submitter.get_full_name|default:submission.submitter.email }} · {{ submission.get_status_display }}</p>
+    </div>
+    <div class="inline-actions">
+        <span class="pill">{{ submission.get_presentation_type_display }}</span>
+        <a class="button-link secondary" href="{% url 'submission-detail' submission.public_id %}">Open full record</a>
+    </div>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <h2>Abstract text</h2>
+        <div class="prose-block">{{ submission.display_text|linebreaks }}</div>
+    </article>
+    <article class="surface">
+        <h2>Signed follow-up links</h2>
+        <div class="stack-list compact-stack">
+            <div class="list-card static-card"><div><strong>Presenter link</strong><p class="muted">{{ public_links.presenter }}</p></div></div>
+            <div class="list-card static-card"><div><strong>Prize link</strong><p class="muted">{{ public_links.prize }}</p></div></div>
+            <div class="list-card static-card"><div><strong>Poster link</strong><p class="muted">{{ public_links.poster }}</p></div></div>
+        </div>
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <h2>Reviewer assignments</h2>
+                <p class="muted">Assign domain experts and track whether scoring has been completed.</p>
+            </div>
+        </div>
+        <div class="stack-list">
+            {% for assignment in submission.review_assignments.all %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ assignment.reviewer.get_full_name|default:assignment.reviewer.email }}</strong>
+                        <p class="muted">{{ assignment.note|default:"No assignment note." }}</p>
+                    </div>
+                    <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">{% if assignment.completed_at %}Reviewed{% else %}Open{% endif %}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No reviewers assigned.</p>
+            {% endfor %}
+        </div>
+        <form method="post" action="{% url 'assign-reviewer' submission.public_id %}" class="inline-form">
+            {% csrf_token %}
+            {% for field in reviewer_form %}
+                <div class="field-block">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <button class="button-link" type="submit">Assign Reviewer</button>
+        </form>
+    </article>
+
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <h2>Copy edit assignments</h2>
+                <p class="muted">Route accepted or review-ready abstracts into the editorial pass.</p>
+            </div>
+        </div>
+        <div class="stack-list">
+            {% for assignment in submission.copy_edit_assignments.all %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ assignment.editor.get_full_name|default:assignment.editor.email }}</strong>
+                        <p class="muted">{{ assignment.note|default:"No assignment note." }}</p>
+                    </div>
+                    <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">{% if assignment.completed_at %}Edited{% else %}Queued{% endif %}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No copy editors assigned.</p>
+            {% endfor %}
+        </div>
+        <form method="post" action="{% url 'assign-editor' submission.public_id %}" class="inline-form">
+            {% csrf_token %}
+            {% for field in editor_form %}
+                <div class="field-block">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <button class="button-link" type="submit">Assign Copy Editor</button>
+        </form>
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <h2>Create session</h2>
+                <p class="muted">Build agenda containers before assigning abstracts to them.</p>
+            </div>
+        </div>
+        <form method="post" action="{% url 'create-program-session' submission.public_id %}" class="stack-form">
+            {% csrf_token %}
+            {% for field in session_form %}
+                <div class="field-block">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+            <button class="button-link" type="submit">Create Session</button>
+        </form>
+    </article>
+
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <h2>Schedule abstract</h2>
+                <p class="muted">Place this submission on the public agenda.</p>
+            </div>
+        </div>
+        {% if submission.program_slot %}
+            <div class="callout">
+                <strong>Current slot</strong>
+                <p>{{ submission.program_slot.session.name }}{% if submission.program_slot.starts_at %} · {{ submission.program_slot.starts_at|date:"M j, g:i A" }}{% endif %}</p>
+            </div>
+        {% endif %}
+        <form method="post" action="{% url 'schedule-submission' submission.public_id %}" class="stack-form">
+            {% csrf_token %}
+            {% for field in schedule_form %}
+                <div class="field-block">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+            <button class="button-link" type="submit">Schedule Abstract</button>
+        </form>
+    </article>
+</section>
+{% endblock %}

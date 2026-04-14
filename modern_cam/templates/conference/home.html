@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Minimal Conference Abstract Management{% endblock %}
+
+{% block content %}
+<section class="hero surface">
+    <div class="hero-copy">
+        <p class="eyebrow">Minimal Conference Abstract Management</p>
+        <h1>Lean abstract operations for scientific meetings that need calm, secure workflow.</h1>
+        <p class="lede">Collect submissions, route peer review, coordinate editorial polish, and publish a clear public agenda from one restrained system.</p>
+        <div class="hero-actions">
+            {% if request.user.is_authenticated %}
+                <a class="button-link" href="{% url 'dashboard' %}">Open Dashboard</a>
+                <a class="button-link secondary" href="{% url 'submission-create' %}">Start a Submission</a>
+            {% else %}
+                <a class="button-link" href="{% url 'register' %}">Create Submitter Account</a>
+                <a class="button-link secondary" href="{% url 'login' %}">Sign In</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="hero-panel">
+        <div class="stat-card">
+            <span class="stat-label">Live submissions</span>
+            <strong>{{ stats.submissions }}</strong>
+            <p class="muted">Drafts and submitted abstracts in the system.</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Ready for review</span>
+            <strong>{{ stats.submitted }}</strong>
+            <p class="muted">Items currently in the reviewer and organizer flow.</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Scheduled</span>
+            <strong>{{ stats.scheduled }}</strong>
+            <p class="muted">Accepted talks already placed on the public agenda.</p>
+        </div>
+    </div>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <p class="section-kicker">Operating model</p>
+        <h2>Built for program teams that prefer signal over clutter</h2>
+        <div class="feature-list">
+            <div>
+                <h3>Submitter workflow</h3>
+                <p>Secure accounts, draft-friendly submission editing, multi-author management, and signed follow-up links for presenter, prize, and poster tasks.</p>
+            </div>
+            <div>
+                <h3>Program desk</h3>
+                <p>Assign reviewers and editors, inspect decisions, build sessions, and move accepted work into a clean public schedule.</p>
+            </div>
+            <div>
+                <h3>Reviewer workflow</h3>
+                <p>Focused scoring forms with clear recommendation tracking, topic hints, and a quiet interface for concentrated reading.</p>
+            </div>
+            <div>
+                <h3>Editorial pass</h3>
+                <p>Structured copy edit handoff that preserves the submitted abstract and the final public-facing version.</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="surface">
+        <p class="section-kicker">Conference structure</p>
+        <h2>Topic coverage at a glance</h2>
+        <div class="topic-cloud">
+            {% for topic in topics %}
+                <span class="topic-pill">{{ topic.category }} / {{ topic.name }}</span>
+            {% empty %}
+                <p class="muted">No topics have been configured yet.</p>
+            {% endfor %}
+        </div>
+        <div class="callout">
+            <strong>Airy forms by default</strong>
+            <p>Every form now uses roomier spacing, clearer labels, larger targets, and fewer visual interruptions so long scientific entries feel manageable.</p>
+        </div>
+    </article>
+</section>
+
+<section class="surface">
+    <div class="section-header">
+        <div>
+            <p class="section-kicker">Public program</p>
+            <h2>Upcoming sessions</h2>
+        </div>
+        <a class="text-link" href="{% url 'agenda' %}">View full agenda</a>
+    </div>
+    <div class="session-grid">
+        {% for session in upcoming_sessions %}
+            <article class="session-card">
+                <p class="session-time">{{ session.starts_at|date:"M j, Y · g:i A" }}</p>
+                <h3>{{ session.name }}</h3>
+                <p class="muted">{{ session.room }}{% if session.chair_name %} · Chaired by {{ session.chair_name }}{% endif %}</p>
+                <p>{{ session.description|default:"Program details will appear here as the agenda is finalized." }}</p>
+            </article>
+        {% empty %}
+            <p class="muted">No sessions have been scheduled yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

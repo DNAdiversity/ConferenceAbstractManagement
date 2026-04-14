@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Minimal workspace</p>
+        <h1>Dashboard</h1>
+        <p class="lede compact">A calm view of your submissions, outstanding reviews, editorial tasks, and organizer signals.</p>
+    </div>
+    <div class="inline-actions">
+        <a class="button-link" href="{% url 'submission-create' %}">Start Submission</a>
+        {% if is_organizer %}
+            <a class="button-link secondary" href="{% url 'organizer-submission-list' %}">Open Program Desk</a>
+        {% endif %}
+    </div>
+</section>
+
+{% if is_organizer and organizer_stats %}
+<section class="stats-row">
+    <article class="stat-card surface">
+        <span class="stat-label">Submitted</span>
+        <strong>{{ organizer_stats.submitted }}</strong>
+    </article>
+    <article class="stat-card surface">
+        <span class="stat-label">Under Review</span>
+        <strong>{{ organizer_stats.under_review }}</strong>
+    </article>
+    <article class="stat-card surface">
+        <span class="stat-label">Edited</span>
+        <strong>{{ organizer_stats.edited }}</strong>
+    </article>
+    <article class="stat-card surface">
+        <span class="stat-label">Scheduled</span>
+        <strong>{{ organizer_stats.scheduled }}</strong>
+    </article>
+</section>
+{% endif %}
+
+<section class="grid-two">
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Submitter</p>
+                <h2>Your abstracts</h2>
+            </div>
+        </div>
+        {% if submissions %}
+            <div class="stack-list">
+                {% for submission in submissions %}
+                    <a class="list-card" href="{% url 'submission-detail' submission.public_id %}">
+                        <div>
+                            <strong>{{ submission.title }}</strong>
+                            <p class="muted">{{ submission.get_presentation_type_display }} · {{ submission.topics.count }} topics</p>
+                        </div>
+                        <span class="pill">{{ submission.get_status_display }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No abstracts yet. Start your first submission when you’re ready.</p>
+        {% endif %}
+    </article>
+
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Reviewer</p>
+                <h2>Your assignments</h2>
+            </div>
+        </div>
+        {% if review_assignments %}
+            <div class="stack-list">
+                {% for assignment in review_assignments %}
+                    <a class="list-card" href="{% url 'review-assignment-detail' assignment.id %}">
+                        <div>
+                            <strong>{{ assignment.submission.title }}</strong>
+                            <p class="muted">Assigned {{ assignment.created_at|date:"M j" }}</p>
+                        </div>
+                        <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">
+                            {% if assignment.completed_at %}Completed{% else %}Open{% endif %}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">Nothing in your reviewer queue right now.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Copy Editor</p>
+                <h2>Your editorial work</h2>
+            </div>
+        </div>
+        {% if copy_edit_assignments %}
+            <div class="stack-list">
+                {% for assignment in copy_edit_assignments %}
+                    <a class="list-card" href="{% url 'copy-edit-assignment-detail' assignment.id %}">
+                        <div>
+                            <strong>{{ assignment.submission.title }}</strong>
+                            <p class="muted">Assigned {{ assignment.created_at|date:"M j" }}</p>
+                        </div>
+                        <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">
+                            {% if assignment.completed_at %}Edited{% else %}Needs work{% endif %}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No copy-edit tasks are currently assigned to you.</p>
+        {% endif %}
+    </article>
+
+    {% if is_organizer %}
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Organizer</p>
+                <h2>Recent submission activity</h2>
+            </div>
+        </div>
+        {% if recent_submissions %}
+            <div class="stack-list">
+                {% for submission in recent_submissions %}
+                    <a class="list-card" href="{% url 'organizer-submission-detail' submission.public_id %}">
+                        <div>
+                            <strong>{{ submission.title }}</strong>
+                            <p class="muted">{{ submission.submitter.get_full_name|default:submission.submitter.email }}</p>
+                        </div>
+                        <span class="pill">{{ submission.get_status_display }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No recent activity yet.</p>
+        {% endif %}
+    </article>
+    {% else %}
+    <article class="surface accent-panel">
+        <p class="section-kicker">Lean by design</p>
+        <h2>One dashboard, role-aware views</h2>
+        <p>Submitters, reviewers, editors, and organizers all share the same shell while only seeing the work that matters to them.</p>
+    </article>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ submission.title }}{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Submission record</p>
+        <h1>{{ submission.title }}</h1>
+        <p class="lede compact">{{ submission.get_presentation_type_display }} · Submitted by {{ submission.submitter.get_full_name|default:submission.submitter.email }}</p>
+    </div>
+    <div class="inline-actions">
+        <span class="pill">{{ submission.get_status_display }}</span>
+        {% if can_edit_submission %}
+            <a class="button-link secondary" href="{% url 'submission-edit' submission.public_id %}">Edit Draft</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <h2>Abstract text</h2>
+        <div class="prose-block">{{ submission.display_text|linebreaks }}</div>
+    </article>
+    <article class="surface">
+        <h2>Metadata</h2>
+        <dl class="meta-list">
+            <div><dt>Status</dt><dd>{{ submission.get_status_display }}</dd></div>
+            <div><dt>Type</dt><dd>{{ submission.get_presentation_type_display }}</dd></div>
+            <div><dt>Topics</dt><dd>{% for topic in submission.topics.all %}{{ topic.name }}{% if not forloop.last %}, {% endif %}{% empty %}No topics{% endfor %}</dd></div>
+            <div><dt>Average score</dt><dd>{% if submission.average_score %}{{ submission.average_score }}{% else %}Not reviewed yet{% endif %}</dd></div>
+            <div><dt>Presenter</dt><dd>{% if submission.presenter_confirmed_author %}{{ submission.presenter_confirmed_author.full_name }}{% else %}Not confirmed{% endif %}</dd></div>
+            <div><dt>Prize opt-in</dt><dd>{{ submission.prize_opt_in_label }}</dd></div>
+            <div><dt>Poster upload</dt><dd>{% if submission.poster_pdf %}<a class="text-link" href="{{ submission.poster_pdf.url }}">View PDF</a>{% else %}Not uploaded{% endif %}</dd></div>
+        </dl>
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <h2>Authors</h2>
+        <div class="stack-list">
+            {% for author in submission.authors.all %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ author.full_name }}</strong>
+                        <p class="muted">{{ author.institution }}{% if author.country %} · {{ author.country }}{% endif %}</p>
+                    </div>
+                    <span class="pill soft-pill">
+                        {% if author.presenting %}Presenting{% elif author.corresponding %}Corresponding{% else %}Author{% endif %}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+    </article>
+    <article class="surface">
+        <h2>Secure follow-up links</h2>
+        <div class="stack-list compact-stack">
+            <div class="list-card static-card">
+                <div>
+                    <strong>Presenter confirmation</strong>
+                    <p class="muted">Signed response link for confirming the presenting author after acceptance.</p>
+                </div>
+                <a class="text-link" href="{{ public_links.presenter }}">Open link</a>
+            </div>
+            <div class="list-card static-card">
+                <div>
+                    <strong>Prize participation</strong>
+                    <p class="muted">Signed public route for prize participation without exposing the submission id.</p>
+                </div>
+                <a class="text-link" href="{{ public_links.prize }}">Open link</a>
+            </div>
+            <div class="list-card static-card">
+                <div>
+                    <strong>Poster upload</strong>
+                    <p class="muted">Use this link for poster PDF collection without exposing the abstract id.</p>
+                </div>
+                <a class="text-link" href="{{ public_links.poster }}">Open link</a>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <h2>Peer review</h2>
+        <div class="stack-list">
+            {% for assignment in submission.review_assignments.all %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ assignment.reviewer.get_full_name|default:assignment.reviewer.email }}</strong>
+                        <p class="muted">{{ assignment.note|default:"No reviewer note." }}</p>
+                    </div>
+                    <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">{% if assignment.completed_at %}Reviewed{% else %}Open{% endif %}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No reviewers have been assigned yet.</p>
+            {% endfor %}
+        </div>
+    </article>
+    <article class="surface">
+        <h2>Editorial polish</h2>
+        <div class="stack-list">
+            {% for assignment in submission.copy_edit_assignments.all %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ assignment.editor.get_full_name|default:assignment.editor.email }}</strong>
+                        <p class="muted">{{ assignment.note|default:"No editor note." }}</p>
+                    </div>
+                    <span class="pill {% if assignment.completed_at %}pill-success{% endif %}">{% if assignment.completed_at %}Edited{% else %}Queued{% endif %}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No copy editor has been assigned yet.</p>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

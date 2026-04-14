@@ -1,0 +1,15 @@
+<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="minimal-cam-ring" x1="14" y1="14" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#44DEC8"/>
+      <stop offset="1" stop-color="#1F8D83"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="60" height="60" rx="20" fill="#07211A" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <path d="M23.25 23.75C29.85 17.15 40.9 16.95 47.35 23.4C51.85 27.9 53.1 34.45 51.1 40.05" stroke="url(#minimal-cam-ring)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M48.45 48.25C41.85 54.85 30.8 55.05 24.35 48.6C19.85 44.1 18.6 37.55 20.6 31.95" stroke="url(#minimal-cam-ring)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M29 29.5H43" stroke="#F4FFFC" stroke-width="3.25" stroke-linecap="round"/>
+  <path d="M29 36H41" stroke="#B7E8DF" stroke-width="3.25" stroke-linecap="round"/>
+  <path d="M29 42.5H37" stroke="#7FBDB4" stroke-width="3.25" stroke-linecap="round"/>
+  <circle cx="49.5" cy="22.5" r="4.5" fill="#F77B93"/>
+</svg>

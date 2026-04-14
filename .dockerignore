@@ -1,0 +1,6 @@
+.git
+.venv
+__pycache__
+*.pyc
+modern_cam/media
+modern_cam/staticfiles

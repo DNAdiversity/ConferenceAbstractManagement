@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Poster Upload{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Signed response link</p>
+        <h1>Upload poster PDF</h1>
+        <p class="lede compact">{{ submission.title }}</p>
+    </div>
+</section>
+
+<section class="surface narrow-form">
+    <form method="post" enctype="multipart/form-data" class="stack-form">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="field-block">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <button class="button-link" type="submit">Upload Poster</button>
+    </form>
+    {% if submission.poster_pdf %}
+        <p class="muted">Current file: <a class="text-link" href="{{ submission.poster_pdf.url }}">View uploaded poster</a></p>
+    {% endif %}
+</section>
+{% endblock %}
