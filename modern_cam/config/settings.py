@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
+
+from conference.services import parse_deadline
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -50,6 +53,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "conference.context_processors.conference_meta",
             ],
         },
     },
@@ -79,6 +83,10 @@ LANGUAGE_CODE = "en-ca"
 TIME_ZONE = os.getenv("TIME_ZONE", "America/Toronto")
 USE_I18N = True
 USE_TZ = True
+CONFERENCE_NAME = os.getenv("CONFERENCE_NAME", "Minimal Conference Abstract Management")
+CONFERENCE_TIME_ZONE = os.getenv("CONFERENCE_TIME_ZONE", TIME_ZONE)
+ABSTRACT_WORD_LIMIT = int(os.getenv("ABSTRACT_WORD_LIMIT", "300"))
+SUBMISSION_DEADLINE = parse_deadline(os.getenv("SUBMISSION_DEADLINE", ""), ZoneInfo(CONFERENCE_TIME_ZONE))
 
 
 STATIC_URL = "/static/"

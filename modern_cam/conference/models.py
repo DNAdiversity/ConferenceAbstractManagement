@@ -131,6 +131,8 @@ class Submission(TimeStampedModel):
     presenter_confirmed_at = models.DateTimeField(null=True, blank=True)
     prize_opt_in = models.BooleanField(null=True, blank=True)
     prize_opt_in_at = models.DateTimeField(null=True, blank=True)
+    submitter_certified_authors_approved = models.BooleanField(default=False)
+    submitter_certified_authors_approved_at = models.DateTimeField(null=True, blank=True)
     poster_pdf = models.FileField(
         upload_to="posters/%Y/%m/",
         blank=True,
@@ -190,6 +192,10 @@ class Submission(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("submission-detail", args=[str(self.public_id)])
+
+    @property
+    def reference_code(self):
+        return f"MCAM-{str(self.public_id).split('-')[0].upper()}"
 
     @property
     def topic_names(self):
@@ -263,6 +269,56 @@ class Submission(TimeStampedModel):
         )
         return suggestions[:limit]
 
+    def snapshot_payload(self):
+        return {
+            "status": self.status,
+            "title": self.title,
+            "presentation_type": self.presentation_type,
+            "abstract_text": self.abstract_text,
+            "edited_abstract_text": self.edited_abstract_text,
+            "topic_names": list(self.topics.order_by("category", "name").values_list("name", flat=True)),
+            "author_records": [
+                {
+                    "order": author.order,
+                    "name": author.full_name,
+                    "email": author.email,
+                    "institution": author.institution,
+                    "country": author.country,
+                    "corresponding": author.corresponding,
+                    "presenting": author.presenting,
+                }
+                for author in self.authors.order_by("order", "id")
+            ],
+            "submitter_certified_authors_approved": self.submitter_certified_authors_approved,
+        }
+
+    def create_snapshot(self, event_type, actor=None, actor_label="", note=""):
+        payload = self.snapshot_payload()
+        return SubmissionSnapshot.objects.create(
+            submission=self,
+            event_type=event_type,
+            actor=actor,
+            actor_label=actor_label or (
+                actor.get_full_name() or actor.email or actor.username if actor else ""
+            ),
+            status=payload["status"],
+            title=payload["title"],
+            presentation_type=payload["presentation_type"],
+            abstract_text=payload["abstract_text"],
+            edited_abstract_text=payload["edited_abstract_text"],
+            topic_names=payload["topic_names"],
+            author_records=payload["author_records"],
+            submitter_certified_authors_approved=payload["submitter_certified_authors_approved"],
+            note=note,
+        )
+
+    @property
+    def latest_submission_snapshot(self):
+        return (
+            self.snapshots.filter(event_type=SubmissionSnapshot.EventType.SUBMITTED).order_by("-created_at").first()
+            or self.snapshots.order_by("-created_at").first()
+        )
+
 
 class Author(TimeStampedModel):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="authors")
@@ -288,6 +344,67 @@ class Author(TimeStampedModel):
     def full_name(self):
         pieces = [self.first_name, self.middle_initial, self.last_name]
         return " ".join(piece for piece in pieces if piece).strip()
+
+
+class SubmissionSnapshot(TimeStampedModel):
+    class EventType(models.TextChoices):
+        DRAFT_SAVED = "DRAFT_SAVED", "Draft saved"
+        SUBMITTED = "SUBMITTED", "Submitted for review"
+        RECEIPT_RESENT = "RECEIPT_RESENT", "Receipt resent"
+        PRESENTER_CONFIRMED = "PRESENTER_CONFIRMED", "Presenter confirmed"
+        PRIZE_UPDATED = "PRIZE_UPDATED", "Prize preference updated"
+        POSTER_UPLOADED = "POSTER_UPLOADED", "Poster uploaded"
+        COPY_EDIT_COMPLETED = "COPY_EDIT_COMPLETED", "Copy edit completed"
+
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="snapshots")
+    event_type = models.CharField(max_length=32, choices=EventType.choices)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="submission_snapshots",
+    )
+    actor_label = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=32, choices=Submission.Status.choices)
+    title = models.CharField(max_length=300)
+    presentation_type = models.CharField(max_length=16, choices=Submission.PresentationType.choices)
+    abstract_text = models.TextField()
+    edited_abstract_text = models.TextField(blank=True)
+    topic_names = models.JSONField(default=list, blank=True)
+    author_records = models.JSONField(default=list, blank=True)
+    submitter_certified_authors_approved = models.BooleanField(default=False)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} · {self.submission.reference_code}"
+
+
+class SubmissionNotification(TimeStampedModel):
+    class Kind(models.TextChoices):
+        SUBMISSION_RECEIPT = "SUBMISSION_RECEIPT", "Submission receipt"
+
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="notifications")
+    kind = models.CharField(max_length=32, choices=Kind.choices)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=255)
+    sent_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="submission_notifications_sent",
+    )
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} -> {self.recipient}"
 
 
 class ReviewAssignment(TimeStampedModel):

@@ -11,6 +11,9 @@
     </div>
     <div class="inline-actions">
         <span class="pill">{{ submission.get_status_display }}</span>
+        {% if latest_receipt %}
+            <a class="button-link secondary" href="{% url 'submission-receipt' submission.public_id %}">View Receipt</a>
+        {% endif %}
         {% if can_edit_submission %}
             <a class="button-link secondary" href="{% url 'submission-edit' submission.public_id %}">Edit Draft</a>
         {% endif %}
@@ -26,9 +29,12 @@
         <h2>Metadata</h2>
         <dl class="meta-list">
             <div><dt>Status</dt><dd>{{ submission.get_status_display }}</dd></div>
+            <div><dt>Reference</dt><dd>{{ submission.reference_code }}</dd></div>
             <div><dt>Type</dt><dd>{{ submission.get_presentation_type_display }}</dd></div>
+            <div><dt>Submitted at</dt><dd>{% if submission.submitted_at %}{{ submission.submitted_at|date:"M j, Y · g:i A" }}{% else %}Draft only{% endif %}</dd></div>
             <div><dt>Topics</dt><dd>{% for topic in submission.topics.all %}{{ topic.name }}{% if not forloop.last %}, {% endif %}{% empty %}No topics{% endfor %}</dd></div>
             <div><dt>Average score</dt><dd>{% if submission.average_score %}{{ submission.average_score }}{% else %}Not reviewed yet{% endif %}</dd></div>
+            <div><dt>Co-author approval</dt><dd>{% if submission.submitter_certified_authors_approved %}Certified{% else %}Not certified{% endif %}</dd></div>
             <div><dt>Presenter</dt><dd>{% if submission.presenter_confirmed_author %}{{ submission.presenter_confirmed_author.full_name }}{% else %}Not confirmed{% endif %}</dd></div>
             <div><dt>Prize opt-in</dt><dd>{{ submission.prize_opt_in_label }}</dd></div>
             <div><dt>Poster upload</dt><dd>{% if submission.poster_pdf %}<a class="text-link" href="{{ submission.poster_pdf.url }}">View PDF</a>{% else %}Not uploaded{% endif %}</dd></div>
@@ -56,6 +62,15 @@
     <article class="surface">
         <h2>Secure follow-up links</h2>
         <div class="stack-list compact-stack">
+            {% if latest_receipt %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>Submission receipt</strong>
+                        <p class="muted">Immutable receipt view based on the exact submitted payload.</p>
+                    </div>
+                    <a class="text-link" href="{% url 'submission-receipt' submission.public_id %}">Open receipt</a>
+                </div>
+            {% endif %}
             <div class="list-card static-card">
                 <div>
                     <strong>Presenter confirmation</strong>
@@ -77,6 +92,49 @@
                 </div>
                 <a class="text-link" href="{{ public_links.poster }}">Open link</a>
             </div>
+        </div>
+    </article>
+</section>
+
+<section class="grid-two">
+    <article class="surface">
+        <div class="section-header">
+            <div>
+                <h2>Receipt deliveries</h2>
+                <p class="muted">Every submission receipt and resend stays visible here for submitters and organizers.</p>
+            </div>
+            {% if can_manage_receipts and submission.status != "DRAFT" %}
+                <form method="post" action="{% url 'submission-resend-receipt' submission.public_id %}">
+                    {% csrf_token %}
+                    <button class="button-link secondary" type="submit">Resend Receipt</button>
+                </form>
+            {% endif %}
+        </div>
+        <div class="stack-list compact-stack">
+            {% for item in receipt_notifications %}
+                <div class="timeline-row">
+                    <strong>{{ item.get_kind_display }}</strong>
+                    <span>{{ item.recipient }}</span>
+                    <span>{{ item.created_at|date:"M j · g:i A" }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No submission receipt has been logged yet.</p>
+            {% endfor %}
+        </div>
+    </article>
+    <article class="surface">
+        <h2>Status history</h2>
+        <div class="stack-list compact-stack">
+            {% for event in submission.snapshots.all|slice:":8" %}
+                <div class="timeline-row timeline-row-stack">
+                    <strong>{{ event.get_event_type_display }}</strong>
+                    <span>{{ event.created_at|date:"M j, Y · g:i A" }}</span>
+                    <span>{{ event.actor_label|default:"System" }}</span>
+                    {% if event.note %}<span>{{ event.note }}</span>{% endif %}
+                </div>
+            {% empty %}
+                <p class="empty-state">Status history will appear here as the submission moves through the system.</p>
+            {% endfor %}
         </div>
     </article>
 </section>

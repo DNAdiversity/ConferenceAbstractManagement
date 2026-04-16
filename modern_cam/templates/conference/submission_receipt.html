@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Submission Receipt · {{ submission.reference_code }}{% endblock %}
+
+{% block content %}
+<section class="section-header-block">
+    <div>
+        <p class="eyebrow">Submission receipt</p>
+        <h1>{{ submission.reference_code }}</h1>
+        <p class="lede compact">{{ receipt_snapshot.get_event_type_display }} · {{ receipt_snapshot.created_at|date:"M j, Y · g:i A" }}</p>
+    </div>
+    <div class="inline-actions">
+        <a class="button-link secondary" href="{% url 'submission-detail' submission.public_id %}">Back to submission</a>
+        <button class="button-link" type="button" onclick="window.print()">Print receipt</button>
+    </div>
+</section>
+
+<section class="grid-two">
+    <article class="surface receipt-sheet">
+        <h2>{{ receipt_snapshot.title }}</h2>
+        <dl class="meta-list">
+            <div><dt>Reference</dt><dd>{{ submission.reference_code }}</dd></div>
+            <div><dt>Status</dt><dd>{{ receipt_snapshot.get_status_display }}</dd></div>
+            <div><dt>Type</dt><dd>{{ receipt_snapshot.get_presentation_type_display }}</dd></div>
+            <div><dt>Certified approvals</dt><dd>{% if receipt_snapshot.submitter_certified_authors_approved %}Yes{% else %}No{% endif %}</dd></div>
+            <div><dt>Topics</dt><dd>{{ receipt_snapshot.topic_names|join:", "|default:"No topics selected" }}</dd></div>
+        </dl>
+        <div class="prose-block compact-prose">{{ receipt_snapshot.abstract_text|linebreaks }}</div>
+    </article>
+    <article class="surface receipt-sheet">
+        <h2>Recorded authors</h2>
+        <div class="stack-list compact-stack">
+            {% for author in receipt_snapshot.author_records %}
+                <div class="list-card static-card">
+                    <div>
+                        <strong>{{ author.name }}</strong>
+                        <p class="muted">{{ author.institution }}{% if author.country %} · {{ author.country }}{% endif %}</p>
+                    </div>
+                    <span class="pill soft-pill">
+                        {% if author.presenting %}Presenting{% elif author.corresponding %}Corresponding{% else %}Author{% endif %}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+        <h2>Receipt deliveries</h2>
+        <div class="stack-list compact-stack">
+            {% for item in receipt_notifications %}
+                <div class="timeline-row">
+                    <strong>{{ item.get_kind_display }}</strong>
+                    <span>{{ item.recipient }}</span>
+                    <span>{{ item.created_at|date:"M j · g:i A" }}</span>
+                </div>
+            {% empty %}
+                <p class="empty-state">No receipt deliveries logged yet.</p>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

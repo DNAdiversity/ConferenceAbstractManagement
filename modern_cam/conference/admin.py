@@ -21,6 +21,8 @@ from .models import (
     Review,
     ReviewAssignment,
     ReviewerTopicExpertise,
+    SubmissionNotification,
+    SubmissionSnapshot,
     Submission,
     Topic,
     UserProfile,
@@ -127,6 +129,26 @@ class ProgramSlotInline(admin.TabularInline):
     extra = 0
 
 
+class ReadOnlyAuditInline(admin.TabularInline):
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class SubmissionSnapshotInline(ReadOnlyAuditInline):
+    model = SubmissionSnapshot
+    fields = ("created_at", "event_type", "status", "actor_label", "note")
+    readonly_fields = ("created_at", "event_type", "status", "actor_label", "note")
+
+
+class SubmissionNotificationInline(ReadOnlyAuditInline):
+    model = SubmissionNotification
+    fields = ("created_at", "kind", "recipient", "sent_by", "subject", "note")
+    readonly_fields = ("created_at", "kind", "recipient", "sent_by", "subject", "note")
+
+
 class ReviewStateFilter(admin.SimpleListFilter):
     title = "review state"
     parameter_name = "review_state"
@@ -223,7 +245,13 @@ class SubmissionAdmin(admin.ModelAdmin):
         "reviewer_suggestions_panel",
         "public_action_links",
     )
-    inlines = [AuthorInline, ReviewAssignmentInline, CopyEditAssignmentInline]
+    inlines = [
+        AuthorInline,
+        ReviewAssignmentInline,
+        CopyEditAssignmentInline,
+        SubmissionSnapshotInline,
+        SubmissionNotificationInline,
+    ]
     filter_horizontal = ("topics",)
     actions = [auto_assign_topic_matched_reviewers]
     date_hierarchy = "submitted_at"
@@ -262,8 +290,10 @@ class SubmissionAdmin(admin.ModelAdmin):
                     "presenter_confirmed_at",
                     "prize_opt_in",
                     "prize_opt_in_at",
-                    "poster_pdf",
-                    "poster_uploaded_at",
+                "poster_pdf",
+                "poster_uploaded_at",
+                "submitter_certified_authors_approved",
+                "submitter_certified_authors_approved_at",
                 )
             },
         ),
@@ -495,6 +525,38 @@ class CopyEditAssignmentAdmin(ReviewerScopedMixin, admin.ModelAdmin):
 @admin.register(CopyEditRecord)
 class CopyEditRecordAdmin(admin.ModelAdmin):
     list_display = ("assignment", "completed_at")
+
+
+@admin.register(SubmissionSnapshot)
+class SubmissionSnapshotAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "submission", "event_type", "status", "actor_label", "note")
+    list_filter = ("event_type", "status")
+    search_fields = ("submission__title", "submission__submitter__email", "actor_label", "note")
+    readonly_fields = (
+        "submission",
+        "event_type",
+        "actor",
+        "actor_label",
+        "status",
+        "title",
+        "presentation_type",
+        "abstract_text",
+        "edited_abstract_text",
+        "topic_names",
+        "author_records",
+        "submitter_certified_authors_approved",
+        "note",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(SubmissionNotification)
+class SubmissionNotificationAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "submission", "kind", "recipient", "sent_by")
+    list_filter = ("kind",)
+    search_fields = ("submission__title", "recipient", "subject", "note")
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(ProgramSession)

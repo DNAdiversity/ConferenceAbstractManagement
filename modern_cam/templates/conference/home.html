@@ -5,9 +5,9 @@
 {% block content %}
 <section class="hero surface">
     <div class="hero-copy">
-        <p class="eyebrow">Minimal Conference Abstract Management</p>
+        <p class="eyebrow">{{ conference_name }}</p>
         <h1>Lean abstract operations for scientific meetings that need calm, secure workflow.</h1>
-        <p class="lede">Collect submissions, route peer review, coordinate editorial polish, and publish a clear public agenda from one restrained system.</p>
+        <p class="lede">Collect submissions, route peer review, issue clear receipts, and publish a public agenda from one restrained system.</p>
         <div class="hero-actions">
             {% if request.user.is_authenticated %}
                 <a class="button-link" href="{% url 'dashboard' %}">Open Dashboard</a>
@@ -72,8 +72,8 @@
             {% endfor %}
         </div>
         <div class="callout">
-            <strong>Airy forms by default</strong>
-            <p>Every form now uses roomier spacing, clearer labels, larger targets, and fewer visual interruptions so long scientific entries feel manageable.</p>
+            <strong>Compact submitter controls</strong>
+            <p>Live word counts, deadline clarity, and receipt tracking keep the submission flow compact without becoming opaque.</p>
         </div>
     </article>
 </section>

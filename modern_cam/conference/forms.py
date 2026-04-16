@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils import timezone
@@ -14,6 +15,7 @@ from .models import (
     Submission,
 )
 from .roles import COPY_EDITOR_GROUP, REVIEWER_GROUP, users_in_group
+from .services import count_words
 
 
 class RegistrationForm(forms.ModelForm):
@@ -75,15 +77,50 @@ class ProfileForm(forms.Form):
 
 
 class SubmissionForm(forms.ModelForm):
+    certify_authors_approved = forms.BooleanField(
+        required=False,
+        label="I confirm that all listed authors have reviewed and approved this abstract for submission.",
+        help_text="Required when submitting for review.",
+    )
+
     class Meta:
         model = Submission
         fields = ["title", "presentation_type", "abstract_text", "topics"]
         widgets = {
-            "title": forms.TextInput(attrs={"placeholder": "A concise, specific abstract title"}),
+            "title": forms.TextInput(
+                attrs={
+                    "placeholder": "A concise, specific abstract title",
+                    "maxlength": "300",
+                    "data-character-target": "title",
+                }
+            ),
             "presentation_type": forms.Select(),
-            "abstract_text": forms.Textarea(attrs={"rows": 12, "placeholder": "Paste the current abstract text here."}),
+            "abstract_text": forms.Textarea(
+                attrs={
+                    "rows": 10,
+                    "placeholder": "Paste the current abstract text here.",
+                    "data-word-target": "abstract",
+                }
+            ),
             "topics": forms.CheckboxSelectMultiple(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["abstract_text"].help_text = (
+            f"Keep the body at or under {settings.ABSTRACT_WORD_LIMIT} words. "
+            "Word count updates live while you edit."
+        )
+
+    def clean_abstract_text(self):
+        abstract_text = self.cleaned_data["abstract_text"].strip()
+        word_count = count_words(abstract_text)
+        if word_count > settings.ABSTRACT_WORD_LIMIT:
+            raise forms.ValidationError(
+                f"Please keep the abstract to {settings.ABSTRACT_WORD_LIMIT} words or fewer. "
+                f"Current count: {word_count}."
+            )
+        return abstract_text
 
 
 class AuthorForm(forms.ModelForm):

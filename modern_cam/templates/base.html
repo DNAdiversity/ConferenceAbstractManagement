@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <script defer src="{% static 'js/formset.js' %}"></script>
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
@@ -39,6 +40,19 @@
         </div>
     </header>
 
+    {% if submission_deadline or submission_deadline_label %}
+        <section class="shell utility-shell">
+            <div class="utility-ribbon utility-ribbon-{{ submission_deadline_state }}">
+                <span class="utility-label">Abstract window</span>
+                <strong>{{ submission_deadline_label }}</strong>
+                {% if submission_deadline %}
+                    <span>{{ submission_deadline|date:"M j, Y · g:i A" }} {{ conference_time_zone }}</span>
+                {% endif %}
+                <span>{{ abstract_word_limit }}-word abstract limit</span>
+            </div>
+        </section>
+    {% endif %}
+
     {% if messages %}
         <section class="shell flash-stack">
             {% for message in messages %}
@@ -54,7 +68,7 @@
     <footer class="site-footer">
         <div class="shell footer-shell">
             <div>
-                <p class="eyebrow">Minimal Conference Abstract Management</p>
+                <p class="eyebrow">{{ conference_name }}</p>
                 <p class="footer-note">Lean submission, review, and scheduling for scientific programs.</p>
             </div>
             <div class="footer-links">
@@ -69,5 +83,6 @@
             </div>
         </div>
     </footer>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

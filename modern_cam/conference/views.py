@@ -31,10 +31,13 @@ from .models import (
     ProgramSlot,
     Review,
     ReviewAssignment,
+    SubmissionNotification,
+    SubmissionSnapshot,
     Submission,
     Topic,
 )
 from .roles import COPY_EDITOR_GROUP, ORGANIZER_GROUP, REVIEWER_GROUP, has_group
+from .services import send_submission_receipt, submission_deadline_context, submission_window_is_open
 from .tokens import submission_from_token
 
 
@@ -161,19 +164,61 @@ def _submission_form(request, submission, create):
     if request.method == "POST":
         form = SubmissionForm(request.POST, instance=submission)
         formset = AuthorFormSet(request.POST, instance=submission, prefix="authors")
+        is_submit_intent = "submit_submission" in request.POST
         if form.is_valid() and formset.is_valid():
+            if is_submit_intent and not submission_window_is_open():
+                deadline_info = submission_deadline_context()
+                form.add_error(
+                    None,
+                    "The abstract deadline closed on "
+                    f"{deadline_info['submission_deadline'].strftime('%b %d, %Y at %I:%M %p %Z')}."
+                )
+            if is_submit_intent and not form.cleaned_data.get("certify_authors_approved"):
+                form.add_error(
+                    "certify_authors_approved",
+                    "Please confirm that every listed author approved this abstract before submitting.",
+                )
+
+        if form.is_valid() and formset.is_valid() and not form.errors:
             draft = form.save(commit=False)
             draft.submitter = request.user
+            if is_submit_intent:
+                draft.submitter_certified_authors_approved = True
+                draft.submitter_certified_authors_approved_at = timezone.now()
             draft.save()
             form.save_m2m()
             formset.instance = draft
             formset.save()
             _normalize_author_order(draft)
-            if "submit_submission" in request.POST:
+            if is_submit_intent:
                 draft.mark_submitted()
-                draft.save(update_fields=["status", "submitted_at", "updated_at"])
+                draft.save(
+                    update_fields=[
+                        "status",
+                        "submitted_at",
+                        "submitter_certified_authors_approved",
+                        "submitter_certified_authors_approved_at",
+                        "updated_at",
+                    ]
+                )
+                draft.create_snapshot(
+                    SubmissionSnapshot.EventType.SUBMITTED,
+                    actor=request.user,
+                    note="Submitted for review",
+                )
+                send_submission_receipt(
+                    draft,
+                    request=request,
+                    actor=request.user,
+                    note="Initial submission receipt",
+                )
                 messages.success(request, "Your abstract has been submitted for review.")
             else:
+                draft.create_snapshot(
+                    SubmissionSnapshot.EventType.DRAFT_SAVED,
+                    actor=request.user,
+                    note="Draft saved",
+                )
                 messages.success(request, "Draft saved.")
             return redirect("submission-detail", draft.public_id)
     else:
@@ -188,6 +233,7 @@ def _submission_form(request, submission, create):
             "formset": formset,
             "submission": submission,
             "page_title": "Start a new abstract" if create else "Edit draft abstract",
+            "submission_deadline_info": submission_deadline_context(),
         },
     )
 
@@ -220,6 +266,8 @@ def submission_detail(request, public_id):
         .prefetch_related(
             "topics",
             "authors",
+            "snapshots",
+            "notifications",
             Prefetch("review_assignments", queryset=ReviewAssignment.objects.select_related("reviewer", "review")),
             Prefetch("copy_edit_assignments", queryset=CopyEditAssignment.objects.select_related("editor", "record")),
         ),
@@ -242,8 +290,67 @@ def submission_detail(request, public_id):
             "public_links": public_links,
             "is_organizer": has_group(request.user, ORGANIZER_GROUP),
             "can_edit_submission": submission.can_edit(request.user),
+            "can_manage_receipts": request.user.id == submission.submitter_id or has_group(request.user, ORGANIZER_GROUP),
+            "latest_receipt": submission.latest_submission_snapshot,
+            "receipt_notifications": submission.notifications.filter(
+                kind=SubmissionNotification.Kind.SUBMISSION_RECEIPT
+            )[:5],
         },
     )
+
+
+@login_required
+def submission_receipt(request, public_id):
+    submission = get_object_or_404(
+        Submission.objects.select_related("submitter")
+        .prefetch_related("topics", "authors", "snapshots", "notifications"),
+        public_id=public_id,
+    )
+    if not _user_can_view_submission(request.user, submission):
+        raise PermissionDenied("You do not have access to this submission receipt.")
+
+    receipt_snapshot = submission.latest_submission_snapshot
+    if receipt_snapshot is None:
+        messages.info(request, "A submission receipt will appear after the abstract is submitted.")
+        return redirect("submission-detail", public_id)
+
+    return render(
+        request,
+        "conference/submission_receipt.html",
+        {
+            "submission": submission,
+            "receipt_snapshot": receipt_snapshot,
+            "receipt_notifications": submission.notifications.filter(
+                kind=SubmissionNotification.Kind.SUBMISSION_RECEIPT
+            )[:10],
+        },
+    )
+
+
+@login_required
+def resend_submission_receipt(request, public_id):
+    submission = get_object_or_404(Submission.objects.select_related("submitter"), public_id=public_id)
+    if not (request.user.id == submission.submitter_id or has_group(request.user, ORGANIZER_GROUP)):
+        raise PermissionDenied("You do not have permission to resend this receipt.")
+    if request.method != "POST":
+        return redirect("submission-detail", public_id)
+    if submission.status == Submission.Status.DRAFT:
+        messages.info(request, "Drafts do not have formal submission receipts yet.")
+        return redirect("submission-detail", public_id)
+
+    send_submission_receipt(
+        submission,
+        request=request,
+        actor=request.user,
+        note="Receipt resent from submission detail",
+    )
+    submission.create_snapshot(
+        SubmissionSnapshot.EventType.RECEIPT_RESENT,
+        actor=request.user,
+        note="Receipt resent",
+    )
+    messages.success(request, "Submission receipt resent.")
+    return redirect("submission-detail", public_id)
 
 
 @organizer_required
@@ -420,6 +527,11 @@ def copy_edit_assignment_detail(request, assignment_id):
             submission.edited_abstract_text = record.edited_text
             submission.status = Submission.Status.EDITED
             submission.save(update_fields=["edited_abstract_text", "status", "updated_at"])
+            submission.create_snapshot(
+                SubmissionSnapshot.EventType.COPY_EDIT_COMPLETED,
+                actor=request.user,
+                note="Copy edit completed",
+            )
             messages.success(request, "Copy edit saved.")
             return redirect("dashboard")
     else:
@@ -456,6 +568,11 @@ def public_presenter_confirm(request, token):
             submission.presenter_confirmed_author = form.cleaned_data["author"]
             submission.presenter_confirmed_at = timezone.now()
             submission.save(update_fields=["presenter_confirmed_author", "presenter_confirmed_at", "updated_at"])
+            submission.create_snapshot(
+                SubmissionSnapshot.EventType.PRESENTER_CONFIRMED,
+                actor_label=form.cleaned_data["author"].full_name,
+                note="Presenter confirmed via secure link",
+            )
             messages.success(request, "Presenter confirmation saved.")
             return redirect("home")
     else:
@@ -484,6 +601,11 @@ def public_prize_choice(request, token):
             submission.prize_opt_in = form.cleaned_data["participating"] == "yes"
             submission.prize_opt_in_at = timezone.now()
             submission.save(update_fields=["prize_opt_in", "prize_opt_in_at", "updated_at"])
+            submission.create_snapshot(
+                SubmissionSnapshot.EventType.PRIZE_UPDATED,
+                actor_label="Signed public link",
+                note=f"Prize preference set to {submission.prize_opt_in_label.lower()}",
+            )
             messages.success(request, "Prize preference saved.")
             return redirect("home")
     else:
@@ -514,6 +636,11 @@ def public_poster_upload(request, token):
             submission = form.save(commit=False)
             submission.poster_uploaded_at = timezone.now()
             submission.save(update_fields=["poster_pdf", "poster_uploaded_at", "updated_at"])
+            submission.create_snapshot(
+                SubmissionSnapshot.EventType.POSTER_UPLOADED,
+                actor_label="Signed public link",
+                note="Poster uploaded",
+            )
             messages.success(request, "Poster PDF uploaded.")
             return redirect("home")
     else:
