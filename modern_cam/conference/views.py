@@ -119,6 +119,29 @@ def dashboard(request):
         .order_by("completed_at", "-created_at")
     )
 
+    submission_counts = {
+        "total": submissions.count(),
+        "drafts": submissions.filter(status=Submission.Status.DRAFT).count(),
+        "active": submissions.filter(
+            status__in=[
+                Submission.Status.SUBMITTED,
+                Submission.Status.UNDER_REVIEW,
+                Submission.Status.REVIEWED,
+                Submission.Status.ASSIGNED_FOR_EDIT,
+                Submission.Status.EDITED,
+            ]
+        ).count(),
+        "scheduled": submissions.filter(
+            status__in=[Submission.Status.SCHEDULED, Submission.Status.FINALIZED]
+        ).count(),
+    }
+    assignment_counts = {
+        "review_open": review_assignments.filter(completed_at__isnull=True).count(),
+        "review_done": review_assignments.filter(completed_at__isnull=False).count(),
+        "edit_open": copy_edit_assignments.filter(completed_at__isnull=True).count(),
+        "edit_done": copy_edit_assignments.filter(completed_at__isnull=False).count(),
+    }
+
     organizer_stats = None
     recent_submissions = None
     if has_group(request.user, ORGANIZER_GROUP):
@@ -137,6 +160,8 @@ def dashboard(request):
             "submissions": submissions,
             "review_assignments": review_assignments,
             "copy_edit_assignments": copy_edit_assignments,
+            "submission_counts": submission_counts,
+            "assignment_counts": assignment_counts,
             "organizer_stats": organizer_stats,
             "recent_submissions": recent_submissions,
             "is_organizer": has_group(request.user, ORGANIZER_GROUP),

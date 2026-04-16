@@ -3,32 +3,43 @@
 {% block title %}Sign In{% endblock %}
 
 {% block content %}
-<section class="auth-grid">
+<section class="auth-grid auth-grid-compact">
     <article class="surface auth-panel auth-copy">
         <p class="eyebrow">Minimal access</p>
         <h1>Sign in to your workspace</h1>
-        <p class="lede compact">Researchers, reviewers, editors, and organizers all use the same secure login. The dashboard stays lean, but the role-aware workflow is still there when you need it.</p>
-        <div class="callout">
-            <strong>Quiet by design</strong>
-            <p>Authentication uses Django’s modern password hashing and session handling, with the same restrained visual system used across the rest of the app.</p>
+        <p class="lede compact">One login for submitters, reviewers, editors, and organizers, with a role-aware dashboard waiting on the other side.</p>
+        <div class="auth-note-list">
+            <div class="auth-note">
+                <strong>Quiet workflow</strong>
+                <p>No extra landing steps once you are in. The dashboard opens straight to the work that matters.</p>
+            </div>
+            <div class="auth-note">
+                <strong>Secure by default</strong>
+                <p>Modern Django password hashing, session handling, and signed public follow-up routes.</p>
+            </div>
+            <div class="auth-note">
+                <strong>Built for conference roles</strong>
+                <p>Submitter, reviewer, editor, and organizer tools stay in the same visual system instead of breaking into separate portals.</p>
+            </div>
         </div>
     </article>
-    <form method="post" class="surface form-layout auth-panel">
+    <form method="post" class="surface form-layout auth-panel auth-panel-compact">
         <div class="section-header">
             <div>
                 <p class="section-kicker">Sign in</p>
                 <h2>Access your dashboard</h2>
             </div>
         </div>
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="field-block">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-                </div>
-            {% endfor %}
-            <button class="button-link" type="submit">Sign In</button>
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="field-block">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        <button class="button-link button-block" type="submit">Sign In</button>
         <p class="muted">Need an account? <a class="text-link" href="{% url 'register' %}">Register as a submitter</a>.</p>
     </form>
 </section>

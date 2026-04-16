@@ -31,6 +31,15 @@
 </form>
 
 <section class="surface">
+    <div class="section-header">
+        <div>
+            <p class="section-kicker">Queue</p>
+            <h2>{{ submissions|length }} matching submission{{ submissions|length|pluralize }}</h2>
+        </div>
+        {% if not submissions %}
+            <span class="pill soft-pill">No active results</span>
+        {% endif %}
+    </div>
     <div class="table-wrap">
         <table>
             <thead>
@@ -53,7 +62,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5">No submissions match the current filters.</td>
+                        <td colspan="5">No submissions match the current filters. Try clearing the search or widening the status filter.</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -3,40 +3,65 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="section-header-block">
-    <div>
-        <p class="eyebrow">Minimal workspace</p>
-        <h1>Dashboard</h1>
-        <p class="lede compact">A calm view of your submissions, outstanding reviews, editorial tasks, and organizer signals.</p>
+<section class="surface workspace-overview">
+    <div class="workspace-hero">
+        <div>
+            <p class="eyebrow">Minimal workspace</p>
+            <h1>Dashboard</h1>
+            <p class="lede compact">A guided view of your submissions, reviewer load, editorial tasks, and organizer signals.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="button-link" href="{% url 'submission-create' %}">Start Submission</a>
+            {% if is_organizer %}
+                <a class="button-link secondary" href="{% url 'organizer-submission-list' %}">Open Program Desk</a>
+            {% endif %}
+        </div>
     </div>
-    <div class="inline-actions">
-        <a class="button-link" href="{% url 'submission-create' %}">Start Submission</a>
-        {% if is_organizer %}
-            <a class="button-link secondary" href="{% url 'organizer-submission-list' %}">Open Program Desk</a>
+    <div class="workspace-kpis">
+        <article class="metric-tile">
+            <span>Drafts</span>
+            <strong>{{ submission_counts.drafts }}</strong>
+            <small>editable now</small>
+        </article>
+        <article class="metric-tile">
+            <span>Active abstracts</span>
+            <strong>{{ submission_counts.active }}</strong>
+            <small>in review flow</small>
+        </article>
+        <article class="metric-tile">
+            <span>Open reviews</span>
+            <strong>{{ assignment_counts.review_open }}</strong>
+            <small>waiting on you</small>
+        </article>
+        <article class="metric-tile">
+            <span>Open edits</span>
+            <strong>{{ assignment_counts.edit_open }}</strong>
+            <small>editorial queue</small>
+        </article>
+        {% if is_organizer and organizer_stats %}
+            <article class="metric-tile">
+                <span>Submitted</span>
+                <strong>{{ organizer_stats.submitted }}</strong>
+                <small>program desk intake</small>
+            </article>
+            <article class="metric-tile">
+                <span>Under review</span>
+                <strong>{{ organizer_stats.under_review }}</strong>
+                <small>review work in progress</small>
+            </article>
+            <article class="metric-tile">
+                <span>Edited</span>
+                <strong>{{ organizer_stats.edited }}</strong>
+                <small>copy-edited records</small>
+            </article>
+            <article class="metric-tile">
+                <span>Scheduled</span>
+                <strong>{{ organizer_stats.scheduled }}</strong>
+                <small>on the agenda</small>
+            </article>
         {% endif %}
     </div>
 </section>
-
-{% if is_organizer and organizer_stats %}
-<section class="stats-row">
-    <article class="stat-card surface">
-        <span class="stat-label">Submitted</span>
-        <strong>{{ organizer_stats.submitted }}</strong>
-    </article>
-    <article class="stat-card surface">
-        <span class="stat-label">Under Review</span>
-        <strong>{{ organizer_stats.under_review }}</strong>
-    </article>
-    <article class="stat-card surface">
-        <span class="stat-label">Edited</span>
-        <strong>{{ organizer_stats.edited }}</strong>
-    </article>
-    <article class="stat-card surface">
-        <span class="stat-label">Scheduled</span>
-        <strong>{{ organizer_stats.scheduled }}</strong>
-    </article>
-</section>
-{% endif %}
 
 <section class="grid-two">
     <article class="surface">
@@ -44,6 +69,7 @@
             <div>
                 <p class="section-kicker">Submitter</p>
                 <h2>Your abstracts</h2>
+                <p class="muted compact-text">Drafts, submitted items, and accepted records all stay in one stack.</p>
             </div>
         </div>
         {% if submissions %}
@@ -68,6 +94,7 @@
             <div>
                 <p class="section-kicker">Reviewer</p>
                 <h2>Your assignments</h2>
+                <p class="muted compact-text">Open reviews stay visually separate from finished work.</p>
             </div>
         </div>
         {% if review_assignments %}
@@ -96,6 +123,7 @@
             <div>
                 <p class="section-kicker">Copy Editor</p>
                 <h2>Your editorial work</h2>
+                <p class="muted compact-text">Editorial tasks live beside your other roles instead of in a second queue.</p>
             </div>
         </div>
         {% if copy_edit_assignments %}
@@ -123,6 +151,7 @@
             <div>
                 <p class="section-kicker">Organizer</p>
                 <h2>Recent submission activity</h2>
+                <p class="muted compact-text">The latest intake and movement through the programme desk.</p>
             </div>
         </div>
         {% if recent_submissions %}
@@ -142,10 +171,23 @@
         {% endif %}
     </article>
     {% else %}
-    <article class="surface accent-panel">
-        <p class="section-kicker">Lean by design</p>
-        <h2>One dashboard, role-aware views</h2>
-        <p>Submitters, reviewers, editors, and organizers all share the same shell while only seeing the work that matters to them.</p>
+    <article class="surface action-board">
+        <p class="section-kicker">Next steps</p>
+        <h2>Keep the workspace moving</h2>
+        <div class="stack-list compact-stack">
+            <div class="timeline-row">
+                <strong>Start a draft</strong>
+                <span>Create a new abstract and keep it editable until you are ready to certify authors and submit.</span>
+            </div>
+            <div class="timeline-row">
+                <strong>Check the agenda</strong>
+                <span>See how the public schedule is shaping up before finalizing presentation choices.</span>
+            </div>
+            <div class="timeline-row">
+                <strong>Use the receipt record</strong>
+                <span>After submission, the audit trail and resendable receipt remain attached to the same abstract.</span>
+            </div>
+        </div>
     </article>
     {% endif %}
 </section>

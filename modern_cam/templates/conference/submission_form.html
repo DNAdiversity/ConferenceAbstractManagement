@@ -23,163 +23,186 @@
 
 <form method="post" class="form-layout">
     {% csrf_token %}
-    <section class="surface form-panel">
-        <div class="section-header">
-            <div>
-                <h2>Abstract</h2>
-                <p class="muted">Keep the title specific, the abstract within limit, and the topic selection focused.</p>
-            </div>
-        </div>
-        {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-
-        <div class="compact-metrics" data-submission-metrics data-word-limit="{{ abstract_word_limit }}">
-            <div class="metric-tile">
-                <span>Title</span>
-                <strong data-character-count-title>0</strong>
-                <small>characters</small>
-            </div>
-            <div class="metric-tile">
-                <span>Abstract</span>
-                <strong data-word-count-abstract>0</strong>
-                <small>of {{ abstract_word_limit }} words</small>
-            </div>
-            <div class="metric-tile">
-                <span>Topics</span>
-                <strong data-topic-count>0</strong>
-                <small>selected</small>
-            </div>
-            <div class="metric-tile">
-                <span>Authors</span>
-                <strong data-author-count>{{ formset.total_form_count }}</strong>
-                <small>listed</small>
-            </div>
-        </div>
-
-        <div class="field-grid two-up">
-            <div class="field-block">
-                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                {{ form.title }}
-                {% if form.title.help_text %}<small>{{ form.title.help_text }}</small>{% endif %}
-                {% for error in form.title.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="field-block">
-                <label for="{{ form.presentation_type.id_for_label }}">{{ form.presentation_type.label }}</label>
-                {{ form.presentation_type }}
-                {% if form.presentation_type.help_text %}<small>{{ form.presentation_type.help_text }}</small>{% endif %}
-                {% for error in form.presentation_type.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-            </div>
-        </div>
-
-        <div class="field-block">
-            <label for="{{ form.abstract_text.id_for_label }}">{{ form.abstract_text.label }}</label>
-            {{ form.abstract_text }}
-            {% if form.abstract_text.help_text %}<small>{{ form.abstract_text.help_text }}</small>{% endif %}
-            {% for error in form.abstract_text.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-
-        <div class="field-block">
-            <label>{{ form.topics.label }}</label>
-            {{ form.topics }}
-            {% if form.topics.help_text %}<small>{{ form.topics.help_text }}</small>{% endif %}
-            {% for error in form.topics.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-    </section>
-
-    <section class="surface form-panel preview-panel">
-        <div class="section-header">
-            <div>
-                <h2>Preview</h2>
-                <p class="muted">This is the compact reviewer-facing preview of the current draft.</p>
-            </div>
-        </div>
-        <div class="preview-sheet">
-            <h3 data-preview-title>{{ form.title.value|default:"Untitled abstract" }}</h3>
-            <p class="preview-meta">
-                <span data-preview-type>{{ form.presentation_type.value|default:"Presentation type" }}</span>
-                <span data-preview-topic-summary>Topic selection updates here</span>
-            </p>
-            <div class="prose-block compact-prose" data-preview-abstract>
-                {{ form.abstract_text.value|default:"Start typing to preview the abstract body here."|linebreaks }}
-            </div>
-        </div>
-    </section>
-
-    <section class="surface form-panel">
-        <div class="section-header">
-            <div>
-                <h2>Authors</h2>
-                <p class="muted">Keep the author list explicit. The final submit step now records your co-author approval certification.</p>
-            </div>
-            <button class="button-link secondary" type="button" data-add-formset="#author-formset" data-template="#empty-author-form">Add Author</button>
-        </div>
-
-        {{ formset.management_form }}
-        {% for non_form_error in formset.non_form_errors %}
-            <p class="field-error">{{ non_form_error }}</p>
-        {% endfor %}
-
-        <div id="author-formset" class="stack-list">
-            {% for author_form in formset %}
-                <article class="surface nested-surface formset-entry">
-                    {% for hidden in author_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="author-grid">
-                        {% for field in author_form.visible_fields %}
-                            <div class="field-block">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-                            </div>
-                        {% endfor %}
+    <div class="composer-grid">
+        <div class="composer-main">
+            <section class="surface form-panel">
+                <div class="section-header">
+                    <div>
+                        <h2>Abstract</h2>
+                        <p class="muted">Keep the title specific, the abstract within limit, and the topic selection focused.</p>
                     </div>
-                    <button class="text-link danger-link" type="button" data-remove-form>Remove this author</button>
-                </article>
-            {% endfor %}
-        </div>
+                </div>
+                {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
 
-        <template id="empty-author-form">
-            <article class="surface nested-surface formset-entry">
-                {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-                <div class="author-grid">
-                    {% for field in formset.empty_form.visible_fields %}
-                        <div class="field-block">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                        </div>
+                <div class="field-grid two-up">
+                    <div class="field-block">
+                        <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.help_text %}<small>{{ form.title.help_text }}</small>{% endif %}
+                        {% for error in form.title.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="field-block">
+                        <label for="{{ form.presentation_type.id_for_label }}">{{ form.presentation_type.label }}</label>
+                        {{ form.presentation_type }}
+                        {% if form.presentation_type.help_text %}<small>{{ form.presentation_type.help_text }}</small>{% endif %}
+                        {% for error in form.presentation_type.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <label for="{{ form.abstract_text.id_for_label }}">{{ form.abstract_text.label }}</label>
+                    {{ form.abstract_text }}
+                    {% if form.abstract_text.help_text %}<small>{{ form.abstract_text.help_text }}</small>{% endif %}
+                    {% for error in form.abstract_text.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="field-block">
+                    <label>{{ form.topics.label }}</label>
+                    {{ form.topics }}
+                    {% if form.topics.help_text %}<small>{{ form.topics.help_text }}</small>{% endif %}
+                    {% for error in form.topics.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+            </section>
+
+            <section class="surface form-panel">
+                <div class="section-header">
+                    <div>
+                        <h2>Authors</h2>
+                        <p class="muted">Keep the author list explicit. The final submit step records your co-author approval certification.</p>
+                    </div>
+                    <button class="button-link secondary" type="button" data-add-formset="#author-formset" data-template="#empty-author-form">Add Author</button>
+                </div>
+
+                {{ formset.management_form }}
+                {% for non_form_error in formset.non_form_errors %}
+                    <p class="field-error">{{ non_form_error }}</p>
+                {% endfor %}
+
+                <div id="author-formset" class="stack-list">
+                    {% for author_form in formset %}
+                        <article class="surface nested-surface formset-entry">
+                            {% for hidden in author_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div class="author-header">
+                                <div>
+                                    <strong>Author {{ forloop.counter }}</strong>
+                                    <p class="muted compact-text">Presenting and corresponding roles stay attached to the same person record.</p>
+                                </div>
+                                <button class="text-link danger-link" type="button" data-remove-form>Remove</button>
+                            </div>
+                            <div class="author-grid">
+                                {% for field in author_form.visible_fields %}
+                                    <div class="field-block">
+                                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </article>
                     {% endfor %}
                 </div>
-                <button class="text-link danger-link" type="button" data-remove-form>Remove this author</button>
-            </article>
-        </template>
-    </section>
 
-    <section class="surface form-panel">
-        <div class="section-header">
-            <div>
-                <h2>Finalize</h2>
-                <p class="muted">Drafts remain editable. Final submission locks in a receipt, timestamp, and author-approval certification.</p>
+                <template id="empty-author-form">
+                    <article class="surface nested-surface formset-entry">
+                        {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <div class="author-header">
+                            <div>
+                                <strong>New author</strong>
+                                <p class="muted compact-text">Add the details, then mark corresponding or presenting if needed.</p>
+                            </div>
+                            <button class="text-link danger-link" type="button" data-remove-form>Remove</button>
+                        </div>
+                        <div class="author-grid">
+                            {% for field in formset.empty_form.visible_fields %}
+                                <div class="field-block">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                </template>
+            </section>
+        </div>
+
+        <aside class="composer-side">
+            <div class="sticky-column">
+                <section class="surface form-panel preview-panel">
+                    <div class="section-header">
+                        <div>
+                            <h2>Overview</h2>
+                            <p class="muted">A compact read on the current draft before it leaves the page.</p>
+                        </div>
+                    </div>
+                    <div class="compact-metrics" data-submission-metrics data-word-limit="{{ abstract_word_limit }}">
+                        <div class="metric-tile">
+                            <span>Title</span>
+                            <strong data-character-count-title>0</strong>
+                            <small>characters</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>Abstract</span>
+                            <strong data-word-count-abstract>0</strong>
+                            <small>of {{ abstract_word_limit }} words</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>Topics</span>
+                            <strong data-topic-count>0</strong>
+                            <small>selected</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>Authors</span>
+                            <strong data-author-count>{{ formset.total_form_count }}</strong>
+                            <small>listed</small>
+                        </div>
+                    </div>
+                    <div class="preview-sheet">
+                        <h3 data-preview-title>{{ form.title.value|default:"Untitled abstract" }}</h3>
+                        <p class="preview-meta">
+                            <span data-preview-type>{{ form.presentation_type.value|default:"Presentation type" }}</span>
+                            <span data-preview-topic-summary>Topic selection updates here</span>
+                        </p>
+                        <div class="prose-block compact-prose" data-preview-abstract>
+                            {{ form.abstract_text.value|default:"Start typing to preview the abstract body here."|linebreaks }}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="surface form-panel composer-aside-card">
+                    <div class="section-header">
+                        <div>
+                            <h2>Finalize</h2>
+                            <p class="muted">Drafts remain editable. Final submission locks in a receipt, timestamp, and certification.</p>
+                        </div>
+                    </div>
+                    <div class="status-note status-note-{{ submission_deadline_state }}">
+                        {% if submission_deadline %}
+                            <strong>{{ submission_deadline_label }}</strong>
+                            <span>Deadline: {{ submission_deadline|date:"M j, Y · g:i A" }} {{ conference_time_zone }}</span>
+                        {% else %}
+                            <strong>Rolling submissions</strong>
+                            <span>Draft and submit whenever the programme team is ready.</span>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-row">
+                        <strong>What happens on submit</strong>
+                        <span>Receipt issued, status history stamped, and the co-author approval certification recorded.</span>
+                    </div>
+                    <div class="field-block field-block-inline">
+                        <label class="checkbox-row" for="{{ form.certify_authors_approved.id_for_label }}">
+                            {{ form.certify_authors_approved }}
+                            <span>{{ form.certify_authors_approved.label }}</span>
+                        </label>
+                        {% if form.certify_authors_approved.help_text %}<small>{{ form.certify_authors_approved.help_text }}</small>{% endif %}
+                        {% for error in form.certify_authors_approved.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="form-actions form-actions-stack">
+                        <button class="button-link secondary" type="submit" name="save_draft">Save Draft</button>
+                        <button class="button-link" type="submit" name="submit_submission" {% if submission_deadline and not submission_deadline_is_open %}disabled{% endif %}>Submit For Review</button>
+                    </div>
+                </section>
             </div>
-        </div>
-        <div class="status-note status-note-{{ submission_deadline_state }}">
-            {% if submission_deadline %}
-                <strong>{{ submission_deadline_label }}</strong>
-                <span>Deadline: {{ submission_deadline|date:"M j, Y · g:i A" }} {{ conference_time_zone }}</span>
-            {% else %}
-                <strong>Rolling submissions</strong>
-                <span>Draft and submit whenever the programme team is ready.</span>
-            {% endif %}
-        </div>
-        <div class="field-block field-block-inline">
-            <label class="checkbox-row" for="{{ form.certify_authors_approved.id_for_label }}">
-                {{ form.certify_authors_approved }}
-                <span>{{ form.certify_authors_approved.label }}</span>
-            </label>
-            {% if form.certify_authors_approved.help_text %}<small>{{ form.certify_authors_approved.help_text }}</small>{% endif %}
-            {% for error in form.certify_authors_approved.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="form-actions">
-            <button class="button-link secondary" type="submit" name="save_draft">Save Draft</button>
-            <button class="button-link" type="submit" name="submit_submission" {% if submission_deadline and not submission_deadline_is_open %}disabled{% endif %}>Submit For Review</button>
-        </div>
-    </section>
+        </aside>
+    </div>
 </form>
 {% endblock %}

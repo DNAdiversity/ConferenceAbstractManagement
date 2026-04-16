@@ -3,65 +3,86 @@
 {% block title %}Create Account{% endblock %}
 
 {% block content %}
-<section class="section-header-block">
-    <div>
+<section class="auth-grid auth-grid-compact">
+    <article class="surface auth-panel auth-copy">
         <p class="eyebrow">Minimal onboarding</p>
         <h1>Create your account</h1>
-        <p class="lede compact">Just the essentials to get you into the submission workspace. Institutional details can stay light.</p>
-    </div>
-</section>
-
-<form method="post" class="surface form-layout narrow-form">
-    {% csrf_token %}
-
-    <div class="grid-two">
-        <div class="field-block">
-            <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
-            {{ form.first_name }}
-            {% for error in form.first_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-        <div class="field-block">
-            <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
-            {{ form.last_name }}
-            {% for error in form.last_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-        </div>
-    </div>
-
-    <div class="field-block">
-        <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-        {{ form.email }}
-        {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
-    </div>
-
-    <div class="grid-two">
-        {% for field in profile_form %}
-            <div class="field-block">
-                <label for="id_{{ field.name }}">{{ field.label }}</label>
-                {{ field }}
-                {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        <p class="lede compact">Just the essentials to get you into the submission workspace. Institutional details stay light, and you can start a draft right away.</p>
+        <div class="auth-note-list">
+            <div class="auth-note">
+                <strong>Fast setup</strong>
+                <p>Name, email, institution, country, and password. No long profile wall before the real work starts.</p>
             </div>
-        {% endfor %}
-    </div>
-
-    <div class="grid-two">
-        <div class="field-block">
-            <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
-            {{ form.password1 }}
-            {% if form.password1.help_text %}<small>{{ form.password1.help_text }}</small>{% endif %}
-            {% for error in form.password1.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            <div class="auth-note">
+                <strong>Conference-ready later</strong>
+                <p>Reviewer assignment, presenter confirmation, and receipt tracking happen after you are inside the workspace.</p>
+            </div>
+            <div class="auth-note">
+                <strong>Lean submitter flow</strong>
+                <p>The account is only the doorway. The abstract draft remains the center of the product.</p>
+            </div>
         </div>
-        <div class="field-block">
-            <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
-            {{ form.password2 }}
-            {% for error in form.password2.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </article>
+
+    <form method="post" class="surface form-layout auth-panel auth-panel-compact">
+        {% csrf_token %}
+
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Create account</p>
+                <h2>Open your submitter workspace</h2>
+            </div>
         </div>
-    </div>
 
-    {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        <div class="field-grid two-up">
+            <div class="field-block">
+                <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                {{ form.first_name }}
+                {% for error in form.first_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field-block">
+                <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                {{ form.last_name }}
+                {% for error in form.last_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+        </div>
 
-    <div class="form-actions">
-        <button class="button-link" type="submit">Create Account</button>
-        <p class="muted">Already registered? <a class="text-link" href="{% url 'login' %}">Sign in</a>.</p>
-    </div>
-</form>
+        <div class="field-block">
+            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="field-grid two-up">
+            {% for field in profile_form %}
+                <div class="field-block">
+                    <label for="id_{{ field.name }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="field-grid two-up">
+            <div class="field-block">
+                <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+                {{ form.password1 }}
+                {% if form.password1.help_text %}<small>{{ form.password1.help_text }}</small>{% endif %}
+                {% for error in form.password1.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field-block">
+                <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+                {{ form.password2 }}
+                {% for error in form.password2.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+        </div>
+
+        {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+
+        <div class="form-actions">
+            <button class="button-link button-block-mobile" type="submit">Create Account</button>
+            <p class="muted">Already registered? <a class="text-link" href="{% url 'login' %}">Sign in</a>.</p>
+        </div>
+    </form>
+</section>
 {% endblock %}
